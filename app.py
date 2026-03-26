@@ -2,21 +2,17 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# إعدادات واجهة الوكالات (Agency Level)
+# إعدادات الواجهة
 st.set_page_config(page_title="Executive Audit Report", layout="wide")
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
 * { font-family: 'Tajawal', sans-serif; }
-.metric-box { background-color: #ffffff; padding: 25px; border-radius: 12px; border-top: 5px solid #1a237e; box-shadow: 0 10px 20px rgba(0,0,0,0.05); direction: rtl; text-align: right;}
-.metric-box h4 { color: #546e7a; font-size: 16px; margin-bottom: 10px; }
-.metric-box h2 { color: #1a237e; font-size: 28px; font-weight: 700; margin: 0; }
-.campaign-card { background-color: #ffffff; padding: 25px; border-radius: 12px; border: 1px solid #eceff1; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); direction: rtl; text-align: right;}
-.status-badge { padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 14px; float: left; }
-.bg-scale { background-color: #e8f5e9; color: #2e7d32; }
-.bg-kill { background-color: #ffebee; color: #c62828; }
-.bg-monitor { background-color: #fff8e1; color: #f57f17; }
+.metric-box { background-color: #ffffff; padding: 20px; border-radius: 12px; border-top: 5px solid #1a237e; box-shadow: 0 4px 10px rgba(0,0,0,0.05); direction: rtl; text-align: right;}
+.metric-box h4 { color: #546e7a; font-size: 15px; margin-bottom: 5px; }
+.metric-box h2 { color: #1a237e; font-size: 24px; font-weight: 700; margin: 0; }
+.strategist-box { background-color: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #dee2e6; margin-bottom: 20px; direction: rtl; text-align: right;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -28,168 +24,139 @@ with col_client:
 with col_date:
     report_date = st.text_input("نطاق التقرير (التاريخ):", placeholder="مثال: مارس 2026")
 
-st.write("### 📝 المعطيات المالية والتشغيلية (إدخال دقيق)")
-# الجدول الجديد بيطلب المبيعات الفعلية والتكلفة الفعلية بالجنيه
+st.write("### 1️⃣ المعطيات المالية والتشغيلية")
 init_data = pd.DataFrame([{
-    "اسم الحملة": "حملة الشتوي", "المصروف": 0.0, "الظهور": 0, "النقرات": 0, "الرسائل": 0, 
+    "اسم الحملة": "", "المصروف": 0.0, "الظهور": 0, "النقرات": 0, "الرسائل": 0, 
     "الأوردرات المسلمة": 0, "المرتجعات": 0, "المبيعات المحصلة": 0.0, "إجمالي تكلفة البضاعة": 0.0
 }])
 
 df_input = st.data_editor(init_data, num_rows="dynamic", use_container_width=True)
 
-if st.button("🔍 تنفيذ الفحص المالي والتقني"):
+st.write("### 2️⃣ عقل الخبير (The Strategist Brain)")
+st.info("البيانات هنا ستظهر للعميل كخريطة طريق للفترة القادمة.")
+col_geo, col_prod = st.columns(2)
+with col_geo:
+    top_geo = st.text_input("📍 أفضل منطقة جغرافية للمبيعات:", placeholder="مثال: القاهرة والإسكندرية")
+    top_age = st.text_input("👥 الفئة العمرية الأكثر شراءً:", placeholder="مثال: من 25 إلى 34 سنة")
+with col_prod:
+    winner_product = st.text_input("🏆 المنتج البطل (Winner):", placeholder="مثال: بجامات بريمارك الصيفي")
+    loser_product = st.text_input("🔻 المنتج الخاسر (Loser):", placeholder="مثال: جواكت الجلد (يجب وقف الاستيراد)")
+    
+action_plan = st.text_area("🎯 خطة إعادة توزيع الميزانية (الأسبوع القادم):", placeholder="مثال: سيتم إيقاف حملة X تماماً لتوفير 500 جنيه يومياً، وسيتم ضخ هذا المبلغ في حملة Y لمضاعفة مبيعات المنتج البطل...")
+
+if st.button("🔍 إصدار التقرير الاستراتيجي النهائي"):
     df = df_input.copy()
     
-    # العمليات الحسابية الصارمة بناءً على الأموال الحقيقية
-    df['إجمالي الأوردرات (خرجت للشحن)'] = df['الأوردرات المسلمة'] + df['المرتجعات']
-    df['صافي الربح الحقيقي'] = df['المبيعات المحصلة'] - (df['المصروف'] + df['إجمالي تكلفة البضاعة'])
+    # فلترة الصفوف الفارغة لمنع الأخطاء التقنية
+    df = df[df['اسم الحملة'].notna() & (df['اسم الحملة'].str.strip() != '') & (df['المصروف'] > 0)]
     
-    # المؤشرات التقنية
-    df['ROAS (الصافي)'] = np.where(df['المصروف'] > 0, df['المبيعات المحصلة'] / df['المصروف'], 0)
-    df['CTR% (جذب الإعلان)'] = np.where(df['الظهور'] > 0, (df['النقرات'] / df['الظهور']) * 100, 0)
-    df['CR% (كفاءة المبيعات)'] = np.where(df['الرسائل'] > 0, (df['إجمالي الأوردرات (خرجت للشحن)'] / df['الرسائل']) * 100, 0)
-    df['CPA (تكلفة العميل)'] = np.where(df['الأوردرات المسلمة'] > 0, df['المصروف'] / df['الأوردرات المسلمة'], 0)
-    df['نسبة المرتجع%'] = np.where(df['إجمالي الأوردرات (خرجت للشحن)'] > 0, (df['المرتجعات'] / df['إجمالي الأوردرات (خرجت للشحن)']) * 100, 0)
+    if df.empty:
+        st.error("برجاء إدخال بيانات حملة واحدة على الأقل وبها مصروف أكبر من صفر.")
+    else:
+        df['إجمالي الأوردرات'] = df['الأوردرات المسلمة'] + df['المرتجعات']
+        df['صافي الربح الحقيقي'] = df['المبيعات المحصلة'] - (df['المصروف'] + df['إجمالي تكلفة البضاعة'])
+        df['ROAS (الصافي)'] = np.where(df['المصروف'] > 0, df['المبيعات المحصلة'] / df['المصروف'], 0)
+        df['CTR%'] = np.where(df['الظهور'] > 0, (df['النقرات'] / df['الظهور']) * 100, 0)
+        df['CR%'] = np.where(df['الرسائل'] > 0, (df['إجمالي الأوردرات'] / df['الرسائل']) * 100, 0)
+        df['CPA'] = np.where(df['الأوردرات المسلمة'] > 0, df['المصروف'] / df['الأوردرات المسلمة'], 0)
+        df['نسبة المرتجع%'] = np.where(df['إجمالي الأوردرات'] > 0, (df['المرتجعات'] / df['إجمالي الأوردرات']) * 100, 0)
 
-    st.write("---")
-    st.write(f"### 📊 الملخص التنفيذي للعميل: {client_name}")
-    
-    total_spend = df['المصروف'].sum()
-    total_revenue = df['المبيعات المحصلة'].sum()
-    total_profit = df['صافي الربح الحقيقي'].sum()
-    total_roas = total_revenue / total_spend if total_spend > 0 else 0
-    
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(f'<div class="metric-box"><h4>إجمالي المصروف الإعلاني</h4><h2>{total_spend:,.0f} EGP</h2></div>', unsafe_allow_html=True)
-    c2.markdown(f'<div class="metric-box"><h4>إجمالي المبيعات المحصلة</h4><h2>{total_revenue:,.0f} EGP</h2></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="metric-box"><h4>صافي الربح (بعد خصم كل التكاليف)</h4><h2 style="color: {"#2e7d32" if total_profit > 0 else "#c62828"};">{total_profit:,.0f} EGP</h2></div>', unsafe_allow_html=True)
-    c4.markdown(f'<div class="metric-box"><h4>العائد على الاستثمار (ROAS)</h4><h2>{total_roas:.2f}x</h2></div>', unsafe_allow_html=True)
+        total_spend = df['المصروف'].sum()
+        total_revenue = df['المبيعات المحصلة'].sum()
+        total_profit = df['صافي الربح الحقيقي'].sum()
+        total_roas = total_revenue / total_spend if total_spend > 0 else 0
+        
+        c1, c2, c3, c4 = st.columns(4)
+        c1.markdown(f'<div class="metric-box"><h4>المصروف الإعلاني</h4><h2>{total_spend:,.0f} EGP</h2></div>', unsafe_allow_html=True)
+        c2.markdown(f'<div class="metric-box"><h4>المبيعات المحصلة</h4><h2>{total_revenue:,.0f} EGP</h2></div>', unsafe_allow_html=True)
+        c3.markdown(f'<div class="metric-box"><h4>صافي الربح</h4><h2 style="color: {"#2e7d32" if total_profit > 0 else "#c62828"};">{total_profit:,.0f} EGP</h2></div>', unsafe_allow_html=True)
+        c4.markdown(f'<div class="metric-box"><h4>الـ ROAS</h4><h2>{total_roas:.2f}x</h2></div>', unsafe_allow_html=True)
 
-    st.write("---")
-    
-    # بناء ملف الـ HTML الاحترافي (Agency Grade)
-    html_report = f"""
-    <html dir="rtl" lang="ar">
-    <head>
-        <meta charset="UTF-8">
-        <title>التقرير الاستراتيجي - {client_name}</title>
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
-            body {{ font-family: 'Tajawal', sans-serif; padding: 50px; color: #263238; background-color: #f9fafb; }}
-            .header {{ text-align: center; margin-bottom: 50px; padding-bottom: 20px; border-bottom: 3px solid #1a237e; }}
-            .header h1 {{ color: #1a237e; font-weight: 900; letter-spacing: -1px; margin-bottom: 5px; }}
-            .header h3 {{ color: #546e7a; font-weight: 400; margin-top: 0; }}
-            .executive-summary {{ display: flex; justify-content: space-between; margin-bottom: 40px; background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }}
-            .sum-item {{ text-align: center; width: 23%; border-left: 1px solid #eceff1; }}
-            .sum-item:last-child {{ border-left: none; }}
-            .sum-item p {{ color: #78909c; font-size: 14px; font-weight: 700; margin-bottom: 5px; }}
-            .sum-item h2 {{ color: #263238; font-size: 28px; margin: 0; }}
-            .profit-positive {{ color: #2e7d32 !important; }}
-            .profit-negative {{ color: #c62828 !important; }}
-            .campaign-row {{ background: #fff; border: 1px solid #cfd8dc; border-radius: 12px; padding: 25px; margin-bottom: 25px; page-break-inside: avoid; }}
-            .c-header {{ border-bottom: 1px solid #eceff1; padding-bottom: 15px; margin-bottom: 20px; }}
-            .c-header h2 {{ margin: 0; color: #37474f; font-size: 22px; display: inline-block; }}
-            .badge {{ float: left; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; }}
-            .badge.scale {{ background: #e8f5e9; color: #2e7d32; }}
-            .badge.kill {{ background: #ffebee; color: #c62828; }}
-            .badge.monitor {{ background: #fff8e1; color: #f57f17; }}
-            .metrics-grid {{ display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }}
-            .m-box {{ width: 30%; background: #f8f9fa; padding: 15px; border-radius: 8px; border-right: 4px solid #90a4ae; }}
-            .m-box p {{ margin: 0 0 5px 0; font-size: 13px; color: #546e7a; }}
-            .m-box h4 {{ margin: 0; font-size: 18px; color: #263238; }}
-            .auditor-verdict {{ background: #f1f8e9; padding: 20px; border-radius: 8px; border: 1px solid #c5e1a5; }}
-            .auditor-verdict.negative {{ background: #ffebee; border-color: #ffcdd2; }}
-            .auditor-verdict h4 {{ margin: 0 0 10px 0; color: #33691e; }}
-            .auditor-verdict.negative h4 {{ color: #b71c1c; }}
-            .auditor-verdict ul {{ margin: 0; padding-right: 20px; color: #455a64; font-size: 14px; line-height: 1.8; }}
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            <h1>تقرير التدقيق الإعلاني والمالي</h1>
-            <h3>العميل: {client_name} | الفترة: {report_date}</h3>
-        </div>
-        
-        <h2 style="color: #1a237e; font-size: 20px; margin-bottom: 15px;">1. الملخص المالي التنفيذي (Executive Summary)</h2>
-        <div class="executive-summary">
-            <div class="sum-item">
-                <p>إجمالي المصروف</p>
-                <h2>{total_spend:,.0f} EGP</h2>
-            </div>
-            <div class="sum-item">
-                <p>المبيعات المحصلة</p>
-                <h2>{total_revenue:,.0f} EGP</h2>
-            </div>
-            <div class="sum-item">
-                <p>صافي الربح الحقيقي</p>
-                <h2 class="{'profit-positive' if total_profit > 0 else 'profit-negative'}">{total_profit:,.0f} EGP</h2>
-            </div>
-            <div class="sum-item">
-                <p>العائد على الاستثمار (ROAS)</p>
-                <h2>{total_roas:.2f}x</h2>
-            </div>
-        </div>
-        
-        <h2 style="color: #1a237e; font-size: 20px; margin-bottom: 15px;">2. التحليل الدقيق للحملات وقرارات التوجيه</h2>
-    """
-
-    for idx, row in df.iterrows():
-        is_profitable = row['صافي الربح الحقيقي'] > 0
-        
-        if not is_profitable:
-            status = "إيقاف فوري وتغيير الاستراتيجية ❌"
-            badge_class = "kill"
-            verdict_class = "negative"
-        elif row['ROAS (الصافي)'] >= 3 and is_profitable:
-            status = "توسيع وزيادة الميزانية (Scale) 🚀"
-            badge_class = "scale"
-            verdict_class = ""
-        else:
-            status = "مراقبة وتحسين مستمر ⚠️"
-            badge_class = "monitor"
-            verdict_class = ""
-            
-        # إضافة الحملة لملف الـ HTML
-        html_report += f"""
-        <div class="campaign-row">
-            <div class="c-header">
-                <h2>{row['اسم الحملة']}</h2>
-                <div class="badge {badge_class}">{status}</div>
+        # بناء التقرير بصيغة HTML
+        html_report = f"""
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>التقرير الاستراتيجي - {client_name}</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+                body {{ font-family: 'Tajawal', sans-serif; padding: 40px; color: #263238; background-color: #f9fafb; }}
+                h1, h2, h3, h4 {{ color: #1a237e; }}
+                .header {{ border-bottom: 3px solid #1a237e; padding-bottom: 15px; margin-bottom: 30px; text-align: center; }}
+                .summary-grid {{ display: flex; justify-content: space-between; background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }}
+                .summary-grid div {{ text-align: center; width: 24%; border-left: 1px solid #eee; }}
+                .summary-grid div:last-child {{ border-left: none; }}
+                .summary-grid p {{ margin: 0 0 5px 0; font-size: 14px; color: #546e7a; }}
+                .summary-grid h3 {{ margin: 0; font-size: 22px; color: #263238; }}
+                .strategy-section {{ background: #e3f2fd; border: 1px solid #bbdefb; padding: 20px; border-radius: 10px; margin-bottom: 30px; }}
+                .strategy-section ul {{ line-height: 1.8; color: #0d47a1; font-weight: bold; }}
+                .campaign-box {{ background: #fff; border: 1px solid #cfd8dc; padding: 20px; border-radius: 10px; margin-bottom: 20px; page-break-inside: avoid; }}
+                .c-metrics {{ display: flex; gap: 15px; margin: 15px 0; background: #f8f9fa; padding: 15px; border-radius: 5px; }}
+                .c-metrics div {{ width: 25%; font-size: 14px; }}
+                .verdict {{ background: #f1f8e9; padding: 15px; border-radius: 5px; font-size: 14px; line-height: 1.6; border: 1px solid #c5e1a5; }}
+                .verdict.negative {{ background: #ffebee; border-color: #ffcdd2; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1 style="margin:0;">التقرير الاستراتيجي الشامل للإعلانات والمبيعات</h1>
+                <p style="margin:5px 0 0 0; font-size: 18px; color: #546e7a;">العميل: <b>{client_name}</b> | الفترة: <b>{report_date}</b></p>
             </div>
             
-            <div class="metrics-grid">
-                <div class="m-box" style="border-right-color: {'#2e7d32' if is_profitable else '#c62828'};">
-                    <p>صافي الربح</p>
-                    <h4 class="{'profit-positive' if is_profitable else 'profit-negative'}">{row['صافي الربح الحقيقي']:,.0f} EGP</h4>
-                </div>
-                <div class="m-box">
-                    <p>عائد الحملة (ROAS)</p>
-                    <h4>{row['ROAS (الصافي)']:.2f}x</h4>
-                </div>
-                <div class="m-box">
-                    <p>تكلفة اكتساب العميل الصافي</p>
-                    <h4>{row['CPA (تكلفة العميل)']:,.0f} EGP</h4>
-                </div>
+            <h2>1. الخلاصة المالية (Executive Summary)</h2>
+            <div class="summary-grid">
+                <div><p>المصروف الإعلاني</p><h3>{total_spend:,.0f} EGP</h3></div>
+                <div><p>المبيعات المحصلة</p><h3>{total_revenue:,.0f} EGP</h3></div>
+                <div><p>صافي الربح</p><h3 style="color: {'#2e7d32' if total_profit > 0 else '#c62828'};">{total_profit:,.0f} EGP</h3></div>
+                <div><p>الـ ROAS الفعلي</p><h3>{total_roas:.2f}x</h3></div>
             </div>
 
-            <div class="auditor-verdict {verdict_class}">
-                <h4>تشخيص الخبير (Auditor Diagnostics):</h4>
+            <h2>2. التوجيه الاستراتيجي وخريطة السوق (Market Insights)</h2>
+            <div class="strategy-section">
+                <p style="margin-top:0; color: #1565c0;">بناءً على تحليل البيانات العميقة للفترة المحددة، إليك خريطة السوق وتوجهات الميزانية:</p>
                 <ul>
-                    <li><b>كفاءة الإعلان (جذب الجمهور):</b> {"المحتوى المرئي غير جذاب ولا يوقف العميل (الهوك ضعيف)، يجب تغييره." if row['CTR% (جذب الإعلان)'] < 1.5 else "المحتوى الإعلاني ممتاز وينجح في لفت انتباه الشريحة المستهدفة."} (معدل: {row['CTR% (جذب الإعلان)']:.2f}%)</li>
-                    <li><b>كفاءة المبيعات (الرد والإغلاق):</b> {"توجد مشكلة حقيقية إما في تسعير المنتج أو في مهارات فريق المبيعات في إغلاق الرسائل." if row['CR% (كفاءة المبيعات)'] < 10 else "فريق المبيعات يتعامل بكفاءة عالية مع الرسائل الواردة."} (معدل: {row['CR% (كفاءة المبيعات)']:.1f}%)</li>
-                    <li><b>تحليل الاسترجاع:</b> نسبة المرتجعات سجلت {row['نسبة المرتجع%']:.1f}%، {"وهو مؤشر خطر يستوجب مراجعة جودة المنتج أو شركة الشحن." if row['نسبة المرتجع%'] > 20 else "وهي ضمن المعدلات الطبيعية للتجارة الإلكترونية."}</li>
+                    <li><b>أفضل منطقة جغرافية للمبيعات:</b> {top_geo}</li>
+                    <li><b>الفئة العمرية الأكثر تفاعلاً وشراءً:</b> {top_age}</li>
+                    <li><b>المنتج البطل (يجب زيادة مخزونه):</b> {winner_product}</li>
+                    <li><b>المنتج الخاسر (يجب تصفيته أو إيقافه):</b> {loser_product}</li>
                 </ul>
+                <h4 style="margin-bottom: 5px; color: #000;">🎯 خطة إعادة توزيع الميزانية للأسبوع القادم:</h4>
+                <p style="margin:0; color: #333; white-space: pre-wrap;">{action_plan}</p>
             </div>
-        </div>
+
+            <h2>3. الأداء التقني للحملات (Campaign Diagnostics)</h2>
         """
+
+        for idx, row in df.iterrows():
+            is_profitable = row['صافي الربح الحقيقي'] > 0
+            verdict_class = "" if is_profitable else "negative"
+            
+            html_report += f"""
+            <div class="campaign-box">
+                <h3 style="margin-top:0; border-bottom: 1px solid #eee; padding-bottom: 10px;">{row['اسم الحملة']} 
+                    <span style="float:left; font-size: 14px; background: {'#e8f5e9' if is_profitable else '#ffebee'}; color: {'#2e7d32' if is_profitable else '#c62828'}; padding: 5px 10px; border-radius: 5px;">
+                        {'زيادة ميزانية 🚀' if is_profitable else 'إيقاف فوري ❌'}
+                    </span>
+                </h3>
+                <div class="c-metrics">
+                    <div><b>صافي الربح:</b> <span style="color: {'#2e7d32' if is_profitable else '#c62828'};">{row['صافي الربح الحقيقي']:,.0f} EGP</span></div>
+                    <div><b>الـ ROAS:</b> {row['ROAS (الصافي)']:.2f}x</div>
+                    <div><b>تكلفة العميل (CPA):</b> {row['CPA']:,.0f} EGP</div>
+                    <div><b>معدل المرتجع:</b> {row['نسبة المرتجع%']:.1f}%</div>
+                </div>
+                <div class="verdict {verdict_class}">
+                    <b>تشخيص الخبير:</b><br>
+                    - <b>الجذب (الإعلان):</b> {"المحتوى المرئي غير جذاب ويجب تغييره فوراً." if row['CTR%'] < 1.5 else "المحتوى الإعلاني ممتاز وينجح في لفت الانتباه."} (CTR: {row['CTR%']:.2f}%)<br>
+                    - <b>الإغلاق (المبيعات):</b> {"يوجد خلل في المبيعات، إما بسبب السعر أو فريق الرد." if row['CR%'] < 10 else "فريق المبيعات يتعامل بكفاءة عالية ويغلق الصفقات بنجاح."} (CR: {row['CR%']:.1f}%)
+                </div>
+            </div>
+            """
+            
+        html_report += "</body></html>"
         
-    html_report += "</body></html>"
-    
-    st.download_button(
-        label="📥 تحميل التقرير الرسمي للعميل (Agency PDF Version)",
-        data=html_report,
-        file_name=f"Executive_Audit_{client_name}.html",
-        mime="text/html"
-    )
-    
-    st.success("تم الفحص بنجاح. يمكنك الآن تحميل التقرير بصيغة HTML. افتحه في المتصفح واضغط (Ctrl+P) لحفظه كملف PDF احترافي وتصديره للعميل.")
+        st.download_button(
+            label="📥 تحميل التقرير الاستراتيجي المعتمد للعميل (PDF Ready)",
+            data=html_report,
+            file_name=f"Strategic_Report_{client_name}.html",
+            mime="text/html"
+        )
