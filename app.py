@@ -2,56 +2,69 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# إعدادات الصفحة
-st.set_page_config(page_title="Meta Ads Deep Audit", layout="wide")
-st.title("لوحة فحص الحملات الإعلانية - Zero Tolerance")
+# إعدادات واجهة المستخدم الاحترافية
+st.set_page_config(page_title="Strategic Ads Auditor", layout="wide")
+st.markdown("""
+    <style>
+    .main { background-color: #f5f7f9; }
+    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    </style>
+    """, unsafe_allow_html=True)
 
-# داتا مبدئية لشكل الجدول
-init_data = pd.DataFrame({
-    'Campaign_Name': ['Campaign_A'],
-    'Amount_Spent': [0.0],
-    'Impressions': [0],
-    'Link_Clicks': [0],
-    'New_Messages': [0],
-    'Total_Orders': [0],
-    'Total_Revenue': [0.0],
-    'Total_Product_Cost': [0.0]
-})
+st.title("🎯 Meta Ads Auditor - Zero Tolerance Edition")
+st.subheader("تحليل كواليس الحملات واستراتيجية تعظيم الأرباح")
 
-st.write("### 1. أدخل الأرقام الخام:")
-# جدول قابل للتعديل والإضافة من الواجهة
-edited_df = st.data_editor(init_data, num_rows="dynamic", use_container_width=True)
+# 1. إدخال البيانات
+with st.expander("📝 إدخال بيانات الحملات (المعطيات الخام)", expanded=True):
+    init_data = pd.DataFrame([{
+        "Campaign": "اسم الحملة", "Spend": 0.0, "Impressions": 0, 
+        "Clicks": 0, "Messages": 0, "Orders": 0, "Revenue": 0.0, "Prod_Cost": 0.0
+    }])
+    df_input = st.data_editor(init_data, num_rows="dynamic", use_container_width=True)
 
-if st.button("تنفيذ الفحص العميق"):
-    df = edited_df.copy()
-    
-    # تجنب القسمة على صفر
-    df.replace(0, np.nan, inplace=True)
-    
-    # حساب المؤشرات التقنية والمالية
-    df['CPM'] = np.round((df['Amount_Spent'] / df['Impressions']) * 1000, 2)
-    df['CTR (%)'] = np.round((df['Link_Clicks'] / df['Impressions']) * 100, 2)
-    df['Cost/Message'] = np.round(df['Amount_Spent'] / df['New_Messages'], 2)
-    df['Conv. Rate (%)'] = np.round((df['Total_Orders'] / df['New_Messages']) * 100, 2)
-    df['CPA'] = np.round(df['Amount_Spent'] / df['Total_Orders'], 2)
-    df['ROAS'] = np.round(df['Total_Revenue'] / df['Amount_Spent'], 2)
-    df['Net Profit'] = df['Total_Revenue'] - (df['Amount_Spent'] + df['Total_Product_Cost'])
-    
-    df.fillna(0, inplace=True) # إرجاع الأصفار مكان الـ NaN
-    
-    st.write("### 2. نتائج الفحص:")
-    st.dataframe(df, use_container_width=True)
-    
-    # قرار الإدارة المالي
-    st.write("### 3. الخلاصة المالية:")
+if st.button("🚀 تشغيل الفحص العميق واستخراج التوصيات"):
+    df = df_input.copy()
+    # الحسابات الذكية
+    df['CTR%'] = (df['Clicks'] / df['Impressions']) * 100
+    df['CR% (Sales)'] = (df['Orders'] / df['Messages']) * 100
+    df['CPA'] = df['Spend'] / df['Orders']
+    df['ROAS'] = df['Revenue'] / df['Spend']
+    df['Net Profit'] = df['Revenue'] - (df['Spend'] + df['Prod_Cost'])
+
+    # 2. ملخص الأداء (Executive Summary)
+    st.markdown("---")
+    c1, c2, c3, c4 = st.columns(4)
     total_profit = df['Net Profit'].sum()
-    total_roas = np.round(df['Total_Revenue'].sum() / df['Amount_Spent'].sum(), 2) if df['Amount_Spent'].sum() > 0 else 0
+    c1.metric("صافي الربح الكلي", f"{total_profit:,.2f} EGP", delta=float(total_profit))
+    c2.metric("متوسط ROAS", f"{df['ROAS'].mean():.2f}x")
+    c3.metric("إجمالي المبيعات", f"{df['Revenue'].sum():,.2f}")
+    c4.metric("تكلفة الاستحواذ (CPA)", f"{df['CPA'].mean():.2f}")
+
+    # 3. التحليل النقدي والتوصيات (The Auditor Voice)
+    st.markdown("### 🔍 تقرير خبير الكواليس والتوصيات:")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        if total_profit > 0:
-            st.success(f"إجمالي صافي الربح الحقيقي: {total_profit} جنيه")
-        else:
-            st.error(f"انتباه! نزيف ميزانية. العجز الحالي: {total_profit} جنيه")
-    with col2:
-        st.info(f"متوسط عائد الإنفاق (ROAS): {total_roas}")
+    for index, row in df.iterrows():
+        with st.container():
+            st.info(f"**الحملة: {row['Campaign']}**")
+            col_a, col_b = st.columns(2)
+            
+            with col_a:
+                # فحص الكرييتف
+                if row['CTR%'] < 1.5:
+                    st.error(f"⚠️ **مشكلة في المحتوى:** معدل النقر {row['CTR%']:.2f}% ضعيف جداً. (الهوك) مش جذاب أو الإعلان محروق.")
+                else:
+                    st.success(f"✅ **الكرييتف قوي:** معدل النقر {row['CTR%']:.2f}% ممتاز، استمر في نفس التوجه.")
+            
+            with col_b:
+                # فحص المبيعات والمودريتور
+                if row['CR% (Sales)'] < 10:
+                    st.warning(f"⚠️ **خلل في الإغلاق:** معدل التحويل {row['CR% (Sales)']:.2f}% قليل. العيب في المودريتور أو السعر مش مناسب للجمهور.")
+                else:
+                    st.success(f"✅ **كفاءة تشغيل عالية:** المودريتور بيقفل أوردرات بنسبة {row['CR% (Sales)']:.2f}% وهذا معدل صحي.")
+            
+            if row['Net Profit'] < 0:
+                st.markdown(f"🚩 **قرار نهائي:** هذه الحملة **تنزف ميزانية**. الإيقاف الفوري هو الحل الوحيد لتجنب خسارة {abs(row['Net_Profit'])} جنيه.")
+            st.markdown("---")
+
+    # 4. زر التحميل (تحويل الجدول لـ CSV كتقرير مبدئي لحين تطوير الـ PDF المعقد)
+    st.download_button("📥 تحميل التقرير التفصيلي (CSV)", df.to_csv().encode('utf-8-sig'), "Full_Audit_Report.csv", "text/csv")
